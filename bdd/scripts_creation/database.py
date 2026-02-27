@@ -1,9 +1,9 @@
 import sqlite3 as sql
 from sqlite3 import Connection, Cursor
-from script_Python.extraction import read_data
-import pandas as pd
+from scripts_Python.extraction import DataManager
 
-class DBQuery:
+
+class DBCreation:
     def __init__(self, db_path_: str):
         self.connect_: Connection | None = None
         self.cursor_: Cursor | None = None
@@ -18,18 +18,20 @@ class DBQuery:
 
     def create_table(self, filepath_: str, table_name_: str):
         self.open_connection()
-        ith_row_ = read_data(filepath_=filepath_)[0]
-        type_list_ = pd.read_csv(filepath_, nrows=1).dtypes.to_list()
+        manager_ = DataManager(filepath_=filepath_)
+        manager_.read()
+
+        type_list_ = manager_.types_.values()
         type_encoder_ = {
             'str': "TEXT",
             'object': "TEXT",
-            'int64': "INT",
-            'float64': "DECIMAL",
+            'int64': "INTEGER",
+            'float64': "REAL",
             'bool': 'BOOLEAN',
             'datetime64[ns]': 'DATETIME',
         }
 
-        columns_ = ith_row_.keys()
+        columns_ = manager_.types_.keys()
         types_ = [type_encoder_[str(t)] for t in type_list_]
 
         attributes_ = ""
@@ -58,6 +60,16 @@ class DBQuery:
     def drop_table(self, table_name_: str):
         self.open_connection()
         self.cursor_.execute(f"DROP TABLE IF EXISTS {table_name_};")
+        self.close_connection()
+
+    def insert_values(self, filepath_: str, table_name_: str):
+        self.open_connection()
+        manager_ = DataManager(filepath_=filepath_)
+        manager_.read()
+
+        unknowns = '?, ' * manager_.data_length_
+        self.cursor_.executemany(f"INSERT INTO {table_name_} VALUES ({unknowns[:-2]})", manager_.data_)
+        self.connect_.commit()
         self.close_connection()
 
     def execute_query(self, query_: str):

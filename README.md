@@ -1,84 +1,56 @@
 # PROJET_UE403_POLLUTION_AIR_OCCITANIE
 
+Ce projet porte sur l'analyse de la pollution de l'air en Occitanie, intégrant des données géoclimatiques et socio-économiques.
+
+## Structure du Projet
+
 ```
 PROJET_UE403_POLLUTION_AIR_OCCITANIE/
 │
 ├── 📁 donnees/
 │   ├── brutes/
-│   │   ├── qualite_air_occitanie.csv
 │   │   ├── donnees_geo_climatiques.csv
 │   │   ├── donnees_socio_economiques.csv
-│   │   └── descriptif_donnees.html
-│   │
+│   │   └── mesures_occitanie_journaliere_pollution.csv
 │   ├── traitees/
-│   │   ├── tables_extraites/
-│   │   │   ├── table_polluants.csv
-│   │   │   ├── table_communes.csv
-│   │   │   └── autres_extractions.csv
-│   │   └── donnees_complementaires/
-│   │       └── (éventuelles données web)
-│   │
-│   └── README_donnees.txt (description des fichiers)
+│   ├── README_descritpion_des_données.md
+│   └── notebook.ipynb
 │
 ├── 📁 bdd/
 │   ├── scripts_creation/
-│   │   ├── 01_creation_bdd.sql
-│   │   ├── 02_import_donnees.sql
-│   │   └── 03_contraintes_index.sql
-│   │
+│   │   ├── database.py       (Classe de gestion SQLite)
+│   │   └── main.py           (Script de création et import)
 │   ├── requetes/
-│   │   ├── requetes_extraction.sql
-│   │   └── requetes_analyses.sql
-│   │
-│   └── schema_bdd.pdf (schéma entité-association)
+│   └── UE403_DB.db           (Base de données SQLite)
 │
-├── 📁 scripts_R/
-│   ├── 00_chargement_packages.R
-│   ├── 01_import_nettoyage.R
-│   ├── 02_statistiques_univariees.R
-│   ├── 03_statistiques_bivariees.R
-│   ├── 04_graphiques.R
-│   └── 05_analyses_problematiques.R
+├── 📁 scripts_Python/
+│   └── extraction.py         (Utilitaire de lecture CSV)
 │
-├── 📁 analyses/
-│   ├── univariee/
-│   │   ├── graphiques/
-│   │   └── resultats/
-│   │
-│   ├── bivariee/
-│   │   ├── graphiques/
-│   │   └── resultats/
-│   │
-│   └── problematiques/
-│       ├── problematique_1/
-│       ├── problematique_2/
-│       └── ... (jusqu'à 5 max)
+├── 📁 scripts_R/             (Analyses statistiques)
 │
-├── 📁 rapport/
-│   ├── rapport_final.Rmd
-│   ├── rapport_final.pdf (généré)
-│   ├── bibliographie.bib (si nécessaire)
-│   └── images/
-│       └── (logos, images pour le rapport)
-│
-├── 📁 presentation_orale/
-│   ├── presentation_seance7.pptx
-│   ├── diagramme_gantt.pptx (ou intégré dans présentation)
-│   └── notes_presentation.txt
-│
-├── 📁 organisation/
-│   ├── planning_gantt.xlsx
-│   ├── repartition_taches.txt
-│   ├── compte_rendus_seances/
-│   │   ├── CR_seance_01.txt
-│   │   ├── CR_seance_02.txt
-│   │   └── ...
-│   └── participation_membres.txt
-│
-├── 📁 documents_reference/
-│   ├── consignes_projet.pdf
-│   ├── tutoriels/
-│   └── ressources_IRIS/
-│
-└── README.md (description générale du projet)
+├── requirements.txt          (Dépendances Python)
+├── LICENSE
+└── README.md
 ```
+
+## Installation
+
+1. Cloner le dépôt.
+2. Installer les dépendances Python :
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Utilisation
+
+### Base de données
+Pour initialiser la base de données SQLite et importer les données brutes :
+```bash
+cd bdd/scripts_creation
+python main.py
+```
+Cela créera le fichier `bdd/UE403_DB.db` avec les tables correspondantes aux fichiers CSV.
+
+### Analyses
+- Le dossier `scripts_R/` contient les scripts pour les statistiques univariées, bivariées et les graphiques.
+- `donnees/notebook.ipynb` peut être utilisé pour des explorations de données.
