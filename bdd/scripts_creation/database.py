@@ -38,23 +38,7 @@ class DBCreation:
         for c, t in zip(columns_, types_):
             attributes_ += f"{c} {t}, "
 
-        self.cursor_.execute(f"CREATE TABLE IF NOT EXISTS {table_name_} ({attributes_[:-2]})")
-        self.close_connection()
-
-    def add_primary_key(self, table_name_: str, attribute_name_: str):
-        self.open_connection()
-        self.cursor_.execute(f"ALTER TABLE {table_name_} (ADD PRIMARY KEY ({attribute_name_}))")
-        self.close_connection()
-
-    def add_foreign_key(
-        self,
-        table_primary_: str,
-        table_foreign_: str,
-        attribute_primary_: str,
-        attribute_foreign_: str
-    ):
-        self.open_connection()
-        self.cursor_.execute(f"ALTER TABLE {table_primary_} (ADD FOREIGN KEY ({attribute_primary_}) REFERENCES {table_foreign_} ({attribute_foreign_}))")
+        self.cursor_.execute(f"CREATE TABLE IF NOT EXISTS {table_name_} ({attributes_[:-2]});")
         self.close_connection()
 
     def drop_table(self, table_name_: str):
@@ -68,7 +52,7 @@ class DBCreation:
         manager_.read()
 
         unknowns = '?, ' * manager_.data_length_
-        self.cursor_.executemany(f"INSERT INTO {table_name_} VALUES ({unknowns[:-2]})", manager_.data_)
+        self.cursor_.executemany(f"INSERT INTO {table_name_} VALUES ({unknowns[:-2]});", manager_.data_)
         self.connect_.commit()
         self.close_connection()
 
