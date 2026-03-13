@@ -1,4 +1,4 @@
-SELECT 
+SELECT DISTINCT
     typologie,
     influence,
     niveau_vie_median_2021 AS niveau_vie_median,
