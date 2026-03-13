@@ -6,7 +6,7 @@ Pour ce projet, nous avons retenu 4 problématiques :
 vie médian plus élevé ?
 2. La qualité de l'air dans chaque type d'environnement, s'améliore ou se dégrade-t-elle au fil des années ?
 3. Existe-t-il une typologie d'environnement favorable à la vie socio-économique de la population ?
-4. Quel facteur est le plus impacté par le taux de concentration des polluants ?
+4. Quels facteurs quantitatifs sont le plus impactés par le taux de concentration des polluants ?
 
 Le challenge sera d'extraire les données sql nécessaires pour répondre à chacune des problématiques.
 Chaque fichier `.._query.sql` correspond à une problématique.

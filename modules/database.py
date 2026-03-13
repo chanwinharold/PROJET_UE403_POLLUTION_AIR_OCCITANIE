@@ -1,6 +1,6 @@
 import sqlite3 as sql
 from sqlite3 import Connection, Cursor
-from scripts_Python.extraction import DataManager
+from modules.extraction import DataManager
 
 
 class DBCreation:

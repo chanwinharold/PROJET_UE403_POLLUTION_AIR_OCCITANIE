@@ -1,11 +1,11 @@
-from database import DBCreation
+from modules.database import DBCreation
 
-db = DBCreation("../UE403_DB.db")
+db = DBCreation("./bdd/UE403_DB.db")
 
 FILE_PATHS = {
-    0 : "../../donnees/brutes/donnees_geo_climatiques.csv",
-    1 : "../../donnees/brutes/donnees_socio_economiques.csv",
-    2 : "../../donnees/brutes/mesures_occitanie_journaliere_pollution.csv"
+    0 : "./donnees/brutes/donnees_geo_climatiques.csv",
+    1 : "./donnees/brutes/donnees_socio_economiques.csv",
+    2 : "./donnees/brutes/mesures_occitanie_journaliere_pollution.csv"
 }
 TABLE_NAMES = {
     0 : "UE403_Geo_climatiques_provisoire",
