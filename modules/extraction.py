@@ -18,10 +18,11 @@ class DataManager:
             self.data_ = [tuple(row.values()) for row in reader_]
 
     @staticmethod
-    def write(db_path_: str, filename_: str, query_: str, columns_names_: list[str]):
+    def write(db_path_: str, filename_: str, query_: str):
         con, cur = sql.connect(db_path_), sql.connect(db_path_).cursor()
         res = cur.execute(query_).fetchall()
-        with open(f"../donnees/traitees/{filename_}.csv", mode='w', newline= '') as file:
+        with open(f"donnees/traitees/{filename_}", mode='w', newline= '') as file:
             writer = csv.writer(file)
-            writer.writerow(columns_names_)
+            writer.writerow([col[0] for col in cur.description])
             writer.writerows(res)
+        con.close()
