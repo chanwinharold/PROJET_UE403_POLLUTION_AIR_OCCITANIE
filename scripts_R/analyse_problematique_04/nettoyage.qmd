@@ -1,0 +1,67 @@
+# Importation des données
+
+```{r}
+dt <- read.csv(file='../../donnees/traitees/problematic_04.csv')
+```
+
+# Nettoyage des données
+
+-   **Valeurs manquantes**
+
+```{r}
+colSums(is.na(dt))
+```
+
+Le `dataframe` ne contient que 2 valeurs manquantes. Ce qui équivaut à 0.028 % de ligne incomplète. Par conséquent, nous allons juste supprimer cette ligne et continuer notre analyse sans elle.
+
+```{r}
+dt <- na.omit(dt)
+```
+
+Pour la suite nous allons juste faire un `summary()` de notre `dataframe` pour voir les éventuels outliers, erreurs de formatage, etc...
+
+```{r}
+summary(dt)
+```
+
+-   **Formatage des données**
+
+On remarque grâce à `summary()` que la colonne `niveau_vie_median_2021` est sous le format `character` au lieu de `numeric` . De plus on a affaire à deux valeurs non numériques dans cette colonne : `N/A - secret statistique`.
+
+```{r}
+mask <- dt$niveau_vie_median_2021=='N/A - secret statistique'
+dt[mask, 'niveau_vie_median_2021'] <- NA
+```
+
+```{r}
+dt$niveau_vie_median_2021 <- as.numeric(dt$niveau_vie_median_2021)
+```
+
+```{r}
+dt
+```
+
+-   **Outliers**
+
+```{r}
+findOutliers <- function(dataframe, column_) {
+    Q1 <- quantile(dataframe[column_], 0.25, na.rm = TRUE)
+    Q3 <- quantile(dataframe[column_], 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    minQ <- Q1 - 1.5 * IQR
+    maxQ <- Q3 + 1.5 * IQR
+    
+    mask <- dataframe[column_] < minQ | dataframe[column_] > maxQ
+    outliers <- dataframe[mask, column_]
+    return(outliers)
+}
+```
+
+```{r}
+for (col in colnames(dt)) {
+    if (is.numeric(dt[, col])) {
+        cat (col, " ==> ", findOutliers(dt, col), "\n")
+    }
+}
+```
