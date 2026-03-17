@@ -9,21 +9,79 @@ format: html
 dt <- read.csv(file="../../donnees/nettoyees/problematic_04.csv")
 ```
 
--   **Fonction de visualisation**
+## **Fonction de visualisation**
 
 ```{r}
 makeVisualisation = function(dataframe_, colname_) {
+    par(mfrow=c(1, 2), oma = c(0, 0, 3, 0))
+
+    # Visualisation de l'Histogramme
+    hist(dataframe_[[colname_]], probability=TRUE, main="Histogramme",xlab=colname_)
+    lines(density(dataframe_[[colname_]], na.rm = TRUE), col = "red", lwd = 2)
     
-    par(mfrow=c(1, 2))
-    hist(dataframe_[[colname_]], probability=TRUE, main=paste("Distribution de la variable", colname_), xlab=colname_)
-    boxplot(dataframe_[[colname_]], main=paste("Boxplot de la variable", colname_), xlab=colname_)
+    # Visualisation du Boxplot
+    boxplot(dataframe_[[colname_]], main="Boxplot", xlab=colname_)
+    mtext(paste("Visualisation de la variable", colname_), outer = TRUE, cex = 1.5)
 }
 ```
 
 ```{r}
-for (col in colnames(dt)) {
-    if (is.numeric(dt[, col])) {
-        makeVisualisation(dt, colname_=col)
-    }
+numerical_columns <- c(
+    "valeur_poll_avg",                                                        
+    "niveau_vie_median_2021",                                                   
+    "nb_logements_2022",                                                        
+    "Pourcentage_appartements_2022",                                         
+    "pourcentage_locataires_dans_résidence_principale_2022",                    
+    "evolution_annuelle_moy_de_la_population_entre_2017_et_2023_en_pourcentage",
+    "population_municipale_2023",                                               
+    "Taux_activite_tranche_15_64_en_2022",                                      
+    "population",                                                               
+    "superficie_km2",                                                           
+    "densite",                                                                  
+    "alti_med",                                                                 
+    "RR_med",                                                                   
+    "NBJRR1_med",                                                               
+    "NBJRR5_med",                                                               
+    "NBJRR10_med",                                                              
+    "Tmin_med",                                                                 
+    "Tmax_med",                                                                
+    "Tens_vap_med",                                                            
+    "Force_vent_med",                                                           
+    "Insolation_med",                                                      
+    "Rayonnement_med"
+)
+```
+
+```{r}
+for (numcol in numerical_columns) {
+    makeVisualisation(dt, numcol)
 }
 ```
+
+## **Interprétations**
+
+-   **valeur_poll_avg**
+
+D'après l'histogramme, nos données sont concentrées entre \[0%, 40%\] et \[50%, 70%\]. Et en appuie du boxplot, 50% des communes tournent autour de 20% de polluants. Donc, on est face à une bimodalité, c'est à dire qu'on a des communes à faible taux de concentration en polluants (0 à 40%) et ceux à forts taux de polluants (50 à 70% ou plus).
+
+-   **niveau_vie_median_2021**
+
+D'après l'Histogramme et le Boxplot, 25% des communes ont un niveau de vie médian en dessous des 20000€, 50% sont concentrées autour des 21000 € et 75% ont un niveau de vie médian en dessous des 22702€. En gros, l'écart interquantile (IQR) nous indique que le niveau de vie médian quelque soit la commune tourne autour des 20000 à 22000€. Par contre, on note un léger étalement vers la droite qui implique que certaines communes ont un niveau de vie médian beaucoup plus élevé (Mais cela n'est pas significatif vu qu'il n'y a pas un si grand écart).
+
+-   **nb_logements_2022, population_municipale_2023, population, superficie_km2, densite, alti_med**
+
+La distribution de ces variables semble toutes se concentrer vers des valeurs relativement faibles pour ensuite former une queue qui s'étale sur la droite. Autrement dit leurs **distributions sont asymétriques à droite (skewness positive).**
+
+La plupart des communes ont un **nombre de logements, une population, une superficie, une densité plutôt faible.** Et les valeurs élevées sont plutôt rares.
+
+-   **Tmax_med, Tens_vap_med**
+
+Ici, on fait un constat contraire au précédent : c'est à dire que les données sont plutôt étalées vers la gauche (skewness négative)
+
+-   **RR_med**
+
+La distribution des précipitations mensuelles (RR_med) est globalement centrée autour de 50–60 mm, indiquant un niveau de précipitations modéré pour la majorité des observations. On observe une légère asymétrie à droite, traduisant la présence de quelques mois exceptionnellement pluvieux. Le boxplot confirme cette tendance avec des valeurs extrêmes élevées, suggérant des épisodes ponctuels de fortes précipitations sans remettre en cause la stabilité globale du phénomène.
+
+-   **Rayonnement_med**
+
+La distribution du rayonnement mensuel présente une structure relativement équilibrée, avec une dispersion modérée et l’absence de valeurs extrêmes marquées. La présence de deux zones de densité suggère une possible bimodalité, probablement liée à un effet saisonnier distinguant les périodes de faible et de fort ensoleillement. Cela traduit un phénomène régulier et cyclique, en cohérence avec les variations annuelles du rayonnement solaire.

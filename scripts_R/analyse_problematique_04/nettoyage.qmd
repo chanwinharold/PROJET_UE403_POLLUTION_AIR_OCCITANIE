@@ -18,8 +18,6 @@ Résultats des recherches :
 
 > -   Pour une série 1950‑2022 d’insolation par jour (ou cumulée par mois), il faut normalement passer par les bases climatiques officielles de Météo‑France (BDM/BDA Climat) via un abonnement ou une demande de données climatologiques personnalisée à Météo‑France, en précisant la station de Biars‑sur‑Cère et la variable « durée d’insolation quotidienne ».​
 >
-> <!-- -->
->
 > -   Des sites comme WeatherSpark ou timeanddate ne fournissent pas gratuitement un fichier CSV détaillé 1950‑2022 d’ensoleillement quotidien pour cette localité, seulement des moyennes ou des périodes plus courtes et/ou issues d’aéroports voisins.
 >
 > -   Pour la commune de **Gaudonville (Gers)**, il n’existe **pas de donnée disponible** pour le **niveau de vie médian 2021**.
@@ -82,7 +80,9 @@ Nous remarquons des outliers pour les colonnes suivantes :
 
     -   Le premier quantile vaut 19980 et le troixième quantile vaut 22702. Du coup, nous avons choisis de garder les outliers du fait qu'ils ne sont pas vraiment abérrants et ne cachent pas totalement la réalité des données
 
--   nb_logements_2022 ==\> 86696 318683 184054 74540 - Par contre ici, le premier quantile vaut 1215 et le troixième quantile vaut 30504. Donc, ces outliers sont vraiment extrêmes et risquent de masquer la réalité des données. Cependant nous avons choisi de les garder du fait du peu de données disponibles (36 lignes)
+-   nb_logements_2022 ==\> 86696 318683 184054 74540
+
+    -   Par contre ici, le premier quantile vaut 1215 et le troixième quantile vaut 30504. Donc, ces outliers sont vraiment extrêmes et risquent de masquer la réalité des données. Cependant nous avons choisi de les garder du fait du peu de données disponibles (36 lignes)
 
 -   evolution_annuelle_moy_de_la_population_entre_2017_et_2023_en_pourcentage ==\> 2.85
 
