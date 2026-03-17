@@ -1,0 +1,29 @@
+---
+title: "analyse_univariee"
+format: html
+---
+
+# Analyse uni-variée des données
+
+```{r}
+dt <- read.csv(file="../../donnees/nettoyees/problematic_04.csv")
+```
+
+-   **Fonction de visualisation**
+
+```{r}
+makeVisualisation = function(dataframe_, colname_) {
+    
+    par(mfrow=c(1, 2))
+    hist(dataframe_[[colname_]], probability=TRUE, main=paste("Distribution de la variable", colname_), xlab=colname_)
+    boxplot(dataframe_[[colname_]], main=paste("Boxplot de la variable", colname_), xlab=colname_)
+}
+```
+
+```{r}
+for (col in colnames(dt)) {
+    if (is.numeric(dt[, col])) {
+        makeVisualisation(dt, colname_=col)
+    }
+}
+```
