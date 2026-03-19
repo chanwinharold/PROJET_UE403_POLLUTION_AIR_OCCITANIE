@@ -9,60 +9,211 @@ format: html
 
 Pour répondre à cette interrogation nous allons :
 
--   Visualiser chaque variable deux à deux avec le taux de concentration des polluants
+1.  Visualiser la relation de chaque variable quantitative avec le taux de concentration des polluants (nuage de points + lissage LOESS)
+2.  Calculer les corrélations pour identifier les variables les plus liées à la concentration en polluants
+3.  Analyser les relations entre variables au sein des groupes thématiques (géo-climatique, socio-économique), en distinguant zones à fort et faible taux de pollution
+4.  Conclure
 
--   Visualiser en 3 puis 4 dimensions les relations existantes entre nos variables et le taux de concentration des polluants.
+------------------------------------------------------------------------
 
--   Conclure
+## 1. Chargement des données
 
 ```{r}
-dt <- read.csv(file="../../donnees/nettoyees/problematic_04.csv")
-```
-
-```{r}
+dt <- read.csv(file = "../../donnees/nettoyees/problematic_04.csv")
 
 target <- "valeur_poll_avg"
+
 numerical_columns <- c(
-    "niveau_vie_median_2021",                                                   
-    "nb_logements_2022",                                                        
-    "Pourcentage_appartements_2022",                                         
-    "pourcentage_locataires_dans_résidence_principale_2022",                    
+    "niveau_vie_median_2021",
+    "nb_logements_2022",
+    "Pourcentage_appartements_2022",
+    "pourcentage_locataires_dans_résidence_principale_2022",
     "evolution_annuelle_moy_de_la_population_entre_2017_et_2023_en_pourcentage",
-    "population_municipale_2023",                                               
-    "Taux_activite_tranche_15_64_en_2022",                                      
-    "population",                                                               
-    "superficie_km2",                                                           
-    "densite",                                                                  
-    "alti_med",                                                                 
-    "RR_med",                                                                   
-    "NBJRR1_med",                                                               
-    "NBJRR5_med",                                                               
-    "NBJRR10_med",                                                              
-    "Tmin_med",                                                                 
-    "Tmax_med",                                                                
-    "Tens_vap_med",                                                            
-    "Force_vent_med",                                                           
-    "Insolation_med",                                                      
+    "population_municipale_2023",
+    "Taux_activite_tranche_15_64_en_2022",
+    "population",
+    "superficie_km2",
+    "densite",
+    "alti_med",
+    "RR_med",
+    "NBJRR1_med",
+    "NBJRR5_med",
+    "NBJRR10_med",
+    "Tmin_med",
+    "Tmax_med",
+    "Tens_vap_med",
+    "Force_vent_med",
+    "Insolation_med",
     "Rayonnement_med"
 )
 ```
 
+------------------------------------------------------------------------
+
+## 2. Nuages de points : chaque variable vs. concentration en polluants
+
+Pour chaque variable, on trace le nuage de points avec le taux de polluants en ordonnée, accompagné d'une courbe de tendance LOESS.
+
 ```{r}
-for (numcol in numerical_columns) {
-    plot(dt[[numcol]], dt[[target]], xlab=numcol, ylab=target)
-} 
+par(mfrow = c(1, 1))
+
+for (col in numerical_columns) {
+
+    x <- dt[[col]]
+    y <- dt[[target]]
+
+    # Supprimer les NA pour le lissage
+    valid <- !is.na(x) & !is.na(y)
+    x_clean <- x[valid]
+    y_clean <- y[valid]
+
+    # Nuage de points
+    plot(x_clean, y_clean,
+         main = paste("Concentration polluants ~", col),
+         xlab = col,
+         ylab = target,
+         pch = 19,
+         col = rgb(0, 0, 0, 0.3))
+
+    # Courbe LOESS
+    model_loess <- loess(y_clean ~ x_clean)
+    x_seq <- seq(min(x_clean), max(x_clean), length.out = 100)
+    y_pred <- predict(model_loess, newdata = data.frame(x_clean = x_seq))
+    lines(x_seq, y_pred, col = "blue", lwd = 2)
+}
 ```
 
--   **Interprétation** :
+**Interprétations** :
 
-Quelque soit la variable, les données semblent être éparpillées. Il n'y a pas une relation visible entre nos variable et le taux de concentration en polluants. Par contre On remarque que la forme du nuage de points entre les couple de variables : (valeur_poll_avg, population), (valeur_poll_avg, population_municipale_2023), (valeur_poll_avg, densite), (valeur_poll_avg, superficie_km2), sont très semblables. Cela suppose une relation entre ces variables géographiques.
+**`valeur_poll_avg ~ densite`** La courbe LOESS montre une relation non-linéaire : la concentration en polluants est élevée pour les très faibles densités, chute jusqu'à \~500 hab/km², puis remonte légèrement pour les fortes densités. La relation est donc en U, ce qui suggère que les zones rurales isolées et les zones très urbaines concentrent davantage les polluants, mais pour des raisons probablement différentes.
+
+**`valeur_poll_avg ~ Tens_vap_med`** La courbe LOESS dessine une forme en U inversé : la pollution diminue d'abord avec la tension de vapeur, puis augmente à partir de \~10 hPa avant de rechuter. La relation est complexe et non-monotone — la tension de vapeur seule n'explique pas directement la pollution.
+
+**`valeur_poll_avg ~ population_municipale_2023`** La courbe LOESS montre une légère remontée de la pollution avec la taille de la population, après un creux autour de 50 000 habitants. L'essentiel des observations est très concentré en bas de l'axe X (petites communes), ce qui limite la fiabilité de la tendance pour les grandes villes.
+
+------------------------------------------------------------------------
+
+## 3. Corrélations avec le taux de concentration en polluants
+
+Pour identifier les variables les plus corrélées à la concentration en polluants, on calcule le coefficient de corrélation de Pearson entre chaque variable numérique et `valeur_poll_avg`, puis on trie par valeur absolue décroissante.
 
 ```{r}
-for (numcol_x in numerical_columns) {
-    for (numcol_y in numerical_columns) {
-        if (numcol_x!=numcol_y) {
-            plot(dt[[numcol_x]], dt[[numcol_y]], xlab=numcol_x, ylab=numcol_y)
+correlations <- sapply(numerical_columns, function(col) {
+    x <- dt[[col]]
+    y <- dt[[target]]
+    valid <- !is.na(x) & !is.na(y)
+    if (sum(valid) > 2) cor(x[valid], y[valid], method = "pearson") else NA
+})
+
+cor_df <- data.frame(
+    variable    = numerical_columns,
+    correlation = round(correlations, 3)
+)
+cor_df <- cor_df[order(abs(cor_df$correlation), decreasing = TRUE), ]
+
+print(cor_df)
+```
+
+```{r}
+# Visualisation : barplot des corrélations triées
+barplot(
+    cor_df$correlation,
+    names.arg = cor_df$variable,
+    las = 2,
+    col = ifelse(cor_df$correlation >= 0, "steelblue", "tomato"),
+    main = "Corrélation de Pearson avec la concentration en polluants",
+    ylab = "Corrélation",
+    cex.names = 0.6
+)
+abline(h = 0, lty = 2)
+```
+
+**Interprétations** :
+
+Le barplot révèle des résultats nets :
+
+**Variables positivement corrélées (bleu) :** - `Rayonnement_med`, `Tmin_med`, `Insolation_med` sont les trois variables les plus corrélées positivement (\~0.45–0.50) : plus il fait chaud et ensoleillé, plus la concentration en polluants tend à être élevée. Cela est cohérent avec la formation de polluants secondaires (ozone notamment) favorisée par le rayonnement solaire. - `NBJRR1_med` (\~0.40) et `Force_vent_med` (\~0.38) suivent, ce qui est plus surprenant pour le vent — à investiguer.
+
+**Variables négativement corrélées (rouge) :** - `niveau_vie_median_2021`, `NBJRR5_med`, `principale_2022`, `RR_med`, `Tmax_med`, `NBJRR10_med` sont tous négatifs (\~-0.30 à -0.40) : les précipitations et un niveau de vie plus élevé sont associés à une pollution plus faible. - `superficie_km2`, `densite`, et les variables démographiques sont proches de 0 : elles semblent peu liées directement à la pollution.
+
+**À retenir** : les variables **climatiques** (rayonnement, températures, précipitations) dominent largement les corrélations, devant les variables socio-économiques et géographiques.
+
+------------------------------------------------------------------------
+
+## 4. Relations entre variables thématiques selon le niveau de pollution
+
+On sépare les observations en deux groupes : - **faible** : concentration \< 40 - **fort** : concentration ≥ 40
+
+Puis on visualise des couples de variables thématiques en colorant par groupe.
+
+```{r}
+dt$groupe_pollution <- ifelse(dt[[target]] < 40, "faible", "fort")
+couleurs <- ifelse(dt$groupe_pollution == "fort", "tomato", "steelblue")
+```
+
+```{r}
+features <- list(
+    # Groupe géo-climatique
+    list("Insolation_med",                       "Rayonnement_med"),
+    list("Tens_vap_med",                         "Force_vent_med"),
+    list("RR_med",                               "Force_vent_med"),
+    # Groupe socio-économique / géographique
+    list("nb_logements_2022",                    "population"),
+    list("superficie_km2",                       "nb_logements_2022"),
+    list("Taux_activite_tranche_15_64_en_2022",  "niveau_vie_median_2021")
+)
+
+for (pair in features) {
+    col_x <- pair[[1]]
+    col_y <- pair[[2]]
+
+    valid <- !is.na(dt[[col_x]]) & !is.na(dt[[col_y]])
+
+    plot(dt[[col_x]][valid], dt[[col_y]][valid],
+         main = paste(col_x, "~", col_y),
+         xlab = col_x,
+         ylab = col_y,
+         pch  = 19,
+         col  = couleurs[valid])
+
+    # Droite de régression globale
+    model_lm <- lm(dt[[col_y]][valid] ~ dt[[col_x]][valid])
+    abline(model_lm, col = "black", lwd = 2, lty = 2)
+
+    # Droite de régression par groupe
+    for (grp in c("faible", "fort")) {
+        mask <- dt$groupe_pollution[valid] == grp
+        if (sum(mask) > 2) {
+            model_grp <- lm(dt[[col_y]][valid][mask] ~ dt[[col_x]][valid][mask])
+            abline(model_grp,
+                   col = ifelse(grp == "fort", "tomato", "steelblue"),
+                   lwd = 2)
         }
     }
-} 
+
+    legend("topleft",
+           legend = c("fort (≥40)", "faible (<40)", "régression globale"),
+           col    = c("tomato", "steelblue", "black"),
+           lwd    = 2,
+           lty    = c(1, 1, 2),
+           bty    = "n")
+}
 ```
+
+**Interprétations** :
+
+**`Insolation_med ~ Rayonnement_med`** Relation très linéaire et forte pour les deux groupes. La droite des zones à **fort taux** (rouge) est décalée vers le haut : à insolation égale, le rayonnement est plus élevé dans les zones polluées. Cela confirme le lien entre ensoleillement intense et pollution, possiblement via la chimie atmosphérique.
+
+**`superficie_km2 ~ nb_logements_2022`** Relation linéaire très claire dans le groupe **faible** (bleu), quasiment absente dans le groupe **fort** (rouge, peu de points, pente quasi nulle). Les zones à forte pollution ont peu de logements quelle que soit leur superficie — ce sont probablement de petites communes peu denses mais exposées à des sources de pollution spécifiques.
+
+**`Taux_activite_tranche_15_64_en_2022 ~ niveau_vie_median_2021`** Relation positive dans les deux groupes : plus le taux d'activité est élevé, plus le niveau de vie médian l'est aussi. Mais la droite du groupe **fort** (rouge) est pratiquement plate et positionnée plus haut en niveau de vie médian — les zones très polluées semblent avoir un niveau de vie relativement stable et élevé indépendamment du taux d'activité. Cela pourrait indiquer des zones péri-urbaines ou industrielles aisées.
+
+------------------------------------------------------------------------
+
+## 5. Conclusion
+
+L'analyse confirme que les facteurs **géo-climatiques** sont les plus corrélés au taux de concentration en polluants, notamment le **rayonnement solaire**, la **température minimale** et l'**insolation médiane**. Ces variables favorisent probablement la formation de polluants secondaires (photochimiques). À l'inverse, les **précipitations** jouent un rôle nettement négatif, en lessivant les polluants atmosphériques.
+
+Les variables **socio-économiques** (niveau de vie, taux d'activité) ont des corrélations plus faibles mais non nulles : un niveau de vie plus élevé est légèrement associé à une pollution moindre, ce qui peut refléter des localisations géographiques différentes (rural vs péri-urbain).
+
+Les variables **démographiques et géographiques** (population, superficie, densité) apparaissent peu discriminantes en corrélation directe, bien que les nuages de points suggèrent des effets non-linéaires complexes, notamment pour la densité.
