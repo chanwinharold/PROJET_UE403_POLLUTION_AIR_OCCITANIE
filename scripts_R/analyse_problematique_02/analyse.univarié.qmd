@@ -3,3 +3,82 @@ title: "analyse.univarié"
 format: html
 ---
 
+# Analyse uni-variée des données
+
+```{r}
+dt <- read.csv(file="../../donnees/nettoyees/problematic_02.csv")
+```
+
+## **Fonction de visualisation**
+
+```{r}
+makeVisualisation = function(dataframe_, colname_) {
+    par(mfrow=c(1, 2), oma = c(0, 0, 3, 0))
+
+    # Visualisation de l'Histogramme
+    hist(dataframe_[[colname_]], probability=TRUE, main="Histogramme",xlab=colname_)
+    lines(density(dataframe_[[colname_]], na.rm = TRUE), col = "red", lwd = 2)
+    
+    # Visualisation du Boxplot
+    boxplot(dataframe_[[colname_]], main="Boxplot", xlab=colname_)
+    mtext(paste("Visualisation de la variable", colname_), outer = TRUE, cex = 1.5)
+}
+```
+
+```{r}
+numerical_columns <- c(
+    
+    "valeur_poll"
+    
+)
+```
+
+```{r}
+for (numcol in numerical_columns) {
+    makeVisualisation(dt, numcol)
+}
+```
+
+## **Interprétations**
+
+### Histogramme
+
+-   La distribution est **fortement asymétrique à droite** (right-skewed) : la grande majorité des valeurs se concentre près de 0, avec une queue qui s'étire jusqu'à \~400.
+
+-   Le pic de densité est très élevé entre 0 et \~20, ce qui indique que la plupart des observations ont de très petites valeurs.
+
+-   La courbe rouge (densité estimée) confirme cette forme exponentielle décroissante.
+
+### Boxplot
+
+-   La **médiane** est très basse (proche de 0), confirmant que 50% des données sont concentrées dans une plage étroite de petites valeurs
+
+-   La **boîte interquartile (IQR)** est très compressée en bas, ce qui traduit une faible dispersion pour la majorité des observations
+
+-   On observe de **nombreux points aberrants (outliers)** au-dessus du moustache supérieur, s'étendant jusqu'à \~400. Ces valeurs extrêmes sont bien visibles sous forme de points isolés.
+
+### Conclusion générale
+
+La variable `valeur_poll` présente une distribution **non normale**, très asymétrique avec une forte concentration de valeurs faibles et de nombreuses valeurs atypiques élevées. Une **transformation logarithmique** (`log(valeur_poll + 1)`) pourrait être envisagée pour normaliser la distribution avant toute modélisation.
+
+```{r}
+list_variables <- c("influence", "typologie",  "nom_poll")
+for (variable in list_variables) {
+  # Compter les occurrences de chaque modalité
+freq <- table(dt[[variable]])
+
+# Puis faire le barplot
+barplot(freq,
+        main  = "Répartition par nom_poll",
+        xlab  = "Catégories",
+        ylab  = "Fréquence",
+        col   = "steelblue",
+        las   = 2)  
+par(mar = c(7, 5, 4, 2))
+}
+ 
+```
+
+```{r}
+colnames(dt)
+```

@@ -3,3 +3,63 @@ title: "nettoyage"
 format: html
 ---
 
+# Importation des données
+
+```{r}
+dt <- read.csv(file='../../donnees/traitees/problematic_02.csv')
+```
+
+# Nettoyage des données
+
+-   **Valeurs manquantes**
+
+```{r}
+colSums(is.na(dt))
+```
+
+Le `dataframe` ne contient pas de valeur manquante. Donc pas de soucis à ce niveau
+
+Pour la suite nous allons juste faire un `summary()` de notre `dataframe` pour voir les éventuels outliers, erreurs de formatage, etc...
+
+```{r}
+summary(dt)
+```
+
+-   **Formatage des données** le formatage des données est propre
+
+-   **Outliers**
+
+```{r}
+findOutliers <- function(dataframe, column_) {
+    Q1 <- quantile(dataframe[column_], 0.25, na.rm = TRUE)
+    Q3 <- quantile(dataframe[column_], 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    minQ <- Q1 - 1.5 * IQR
+    maxQ <- Q3 + 1.5 * IQR
+    
+    mask <- dataframe[column_] < minQ | dataframe[column_] > maxQ
+    outliers <- dataframe[mask, column_]
+    return(outliers)
+}
+```
+
+```{r}
+for (col in colnames(dt)) {
+    if (is.numeric(dt[, col])) {
+        cat (col, " ==> ", findOutliers(dt, col), "\n")
+    }
+}
+```
+
+Nous remarquons des outliers pour la colonne valeur_poll et on ne peut pas les supprimer sinon on risque de perdre trop de données
+
+-   **Doublons :**
+
+    -   Nous avons pris le soin de supprimer les doublons lors de la création du csv à l'étape de transformation des requêtes de la problématique. Donc pas de doublon à signaler.
+
+    ## Exportation des données nettoyées
+
+    ```{r}
+    write.csv(x=dt, file='../../donnees/nettoyees/problematic_02.csv', row.names=FALSE)
+    ```
