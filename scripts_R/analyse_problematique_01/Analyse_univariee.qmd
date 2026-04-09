@@ -3,3 +3,136 @@ title: "Analyse_univariee"
 format: html
 ---
 
+# Analyse uni-variée des données
+
+```{r}
+dt <- read.csv(file='../../donnees/nettoyees/problematic_01.csv')
+```
+
+## **Fonction de visualisation**
+
+```{r}
+summary(dt)
+```
+
+```{r}
+makeVisualisation = function(dataframe_, colname_) {
+    par(mfrow=c(1, 2), oma = c(0, 0, 3, 0))
+
+    # Visualisation de l'Histogramme
+    hist(dataframe_[[colname_]], probability=TRUE, main="Histogramme",xlab=colname_)
+    lines(density(dataframe_[[colname_]], na.rm = TRUE), col = "red", lwd = 2)
+    
+    # Visualisation du Boxplot
+    boxplot(dataframe_[[colname_]], main="Boxplot", xlab=colname_)
+    mtext(paste("Visualisation de la variable", colname_), outer = TRUE, cex = 1.5)
+}
+```
+
+```{r}
+makeVisualisation(dt, "niveau_vie_median_2021")
+```
+
+```{r}
+ls()
+```
+
+# **Analyse uni-variée des données** 
+
+#### **1. niveau_vie_median_2021**
+
+D’après l’histogramme et le boxplot, la distribution du niveau de vie médian est globalement **centrée autour de 21 000 – 22 000 €**, ce qui est confirmé par la médiane (21 850 €) et la moyenne (22 040 €).L’histogramme présente une forme **globalement en cloche**, mais avec une **légère asymétrie à droite**, ce qui signifie que certaines communes ont des niveaux de vie nettement plus élevés que la moyenne.Le boxplot met en évidence la présence de **nombreuses valeurs aberrantes (outliers)**, notamment vers le haut (jusqu’à 46 720 €), mais aussi quelques valeurs faibles (autour de 12 260 €).
+
+Ainsi, la majorité des communes ont un niveau de vie relativement homogène, mais il existe des disparités importantes pour certaines communes plus riches.
+
+**2. RR_med (précipitations)**
+
+La variable RR_med présente une distribution **relativement centrée autour de 60 mm** (médiane = 60, moyenne ≈ 61.9).L’écart entre le minimum (17.75) et le maximum (126.7) montre une **variabilité importante des précipitations** selon les communes.La distribution semble légèrement **asymétrique à droite**, ce qui indique la présence de quelques valeurs élevées (zones très pluvieuses), mais la majorité des observations reste concentrée autour de valeurs modérées.
+
+**3. NBJRR1_med, NBJRR5_med, NBJRR10_med**
+
+Ces variables représentent le nombre de jours de pluie selon différents seuils.
+
+-   **NBJRR1_med** (médiane = 8) : la majorité des communes ont entre 7 et 9 jours de pluie modérée
+
+-   **NBJRR5_med** (médiane = 4) : distribution assez concentrée → faible dispersion
+
+-   **NBJRR10_med** (médiane = 2) : peu de jours avec fortes précipitations
+
+Ces variables montrent une **faible dispersion**, ce qui signifie que le nombre de jours de pluie est relativement similaire entre les communes.
+
+**4. Tmin_med et Tmax_med (températures)**
+
+-   **Tmin_med** :
+
+    -   Médiane ≈ 8.1°C
+
+    -   Distribution assez étalée (de -1.8 à 18.15)
+
+    -   Indique une variabilité importante des températures minimales
+
+-   **Tmax_med** :
+
+    -   Médiane ≈ 18.7°C
+
+    -   Distribution plus concentrée
+
+    -   Quelques valeurs extrêmes élevées (jusqu’à 32.7°C)
+
+Globalement, les températures présentent une **variabilité modérée**, avec quelques extrêmes mais une concentration autour de valeurs moyennes.
+
+**5. Tens_vap_med (tension de vapeur)**
+
+La variable est centrée autour de **11.2** avec une dispersion relativement faible.
+
+Les valeurs sont comprises entre 5 et 13, ce qui montre une **bonne homogénéité** entre les communes.
+
+**6. Force_vent_med**
+
+La vitesse du vent est globalement faible :
+
+-   Médiane ≈ 2.7
+
+-   Moyenne ≈ 2.84
+
+Cependant, le maximum atteint 8, ce qui indique la présence de quelques zones plus venteuses.
+
+La distribution est donc **légèrement asymétrique à droite**.
+
+**7. Insolation_med**
+
+L’insolation est centrée autour de :
+
+-   Médiane ≈ 3512 minutes
+
+-   Moyenne ≈ 3577 minutes
+
+La dispersion reste modérée, avec des valeurs allant de 2808 à 4690.
+
+Cela traduit des **différences d’ensoleillement entre les communes**, mais sans extrêmes très marqués.
+
+**8. Rayonnement_med**
+
+Le rayonnement est centré autour de :
+
+-   Médiane ≈ 13 400
+
+-   Moyenne ≈ 13 443
+
+-   La distribution est relativement homogène, bien que certaines valeurs atteignent 15 794.
+
+Cela suggère une **variation modérée du rayonnement solaire** entre les communes.
+
+## **Conclusion** 
+
+L’analyse univariée met en évidence que :
+
+-   Le **niveau de vie médian** est globalement homogène mais présente des **outliers importants**
+
+-   Les variables climatiques sont globalement :
+
+    -   **peu dispersées** (ex : NBJRR, Tens_vap)
+
+    -   ou **modérément variables** (températures, précipitations)
+
+-   Certaines variables montrent une **asymétrie à droite**, indiquant la présence de valeurs extrêmes (notamment précipitations et niveau de vie)
