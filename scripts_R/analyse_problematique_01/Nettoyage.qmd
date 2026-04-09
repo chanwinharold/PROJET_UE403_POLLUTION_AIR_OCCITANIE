@@ -1,0 +1,107 @@
+# Importation des données
+
+```{r}
+dt <- read.csv(file='../../donnees/traitees/problematic_01.csv')
+```
+
+# Nettoyage des données
+
+-   **Valeurs totales**
+
+```{r}
+nrow(dt)
+```
+
+-   **Valeurs manquantes**
+
+```{r}
+colSums(is.na(dt))
+```
+
+Dans notre base de données, on remarque qu’il y a des valeurs manquantes (NA) dans les variables Rayonnement_med et Insolation_med. Ce sont deux variables quantitatives importantes car elles mesurent le rayonnement et la durée d’ensoleillement. Après analyse, ces valeurs manquantes représentent environ 7 % des données, ce qui reste assez faible. On a donc choisi de supprimer les lignes contenant des NA avec la fonction na.omit().Ce choix est logique car on ne perd pas beaucoup de données, et surtout on évite de remplacer les valeurs manquantes par des estimations qui pourraient fausser les résultats. En plus, ces deux variables sont liées entre elles, donc une mauvaise estimation pourrait casser cette relation.
+
+Au final, supprimer les lignes avec des NA permet de garder une base de données plus propre et plus fiable pour la suite de l’analyse.
+
+-   **Suppressions des NA**
+
+    ```{r}
+    dt <- na.omit(dt)
+    ```
+
+Pour la suite nous allons juste faire un `summary()` de notre `dataframe` pour voir les éventuels outliers, erreurs de formatage, etc...
+
+```{r}
+summary(dt)
+```
+
+-   **Formatage des données**
+
+On remarque grâce à `summary()` que la colonne `niveau_vie_median_2021` est sous le format `character` au lieu de `numeric` . De plus on a affaire à deux valeurs non numériques dans cette colonne : `N/A - secret statistique`.
+
+```{r}
+mask <- dt$niveau_vie_median_2021 == 'N/A - secret statistique' & 
+        !is.na(dt$niveau_vie_median_2021)
+
+dt[mask, 'niveau_vie_median_2021'] <- NA
+```
+
+```{r}
+dt$niveau_vie_median_2021 <- as.numeric(dt$niveau_vie_median_2021)
+```
+
+```{r}
+summary(dt$niveau_vie_median_2021)
+```
+
+-   **Outliers**
+
+```{r}
+findOutliers <- function(dataframe, column_) {
+    Q1 <- quantile(dataframe[column_], 0.25, na.rm = TRUE)
+    Q3 <- quantile(dataframe[column_], 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    minQ <- Q1 - 1.5 * IQR
+    maxQ <- Q3 + 1.5 * IQR
+    
+    mask <- dataframe[column_] < minQ | dataframe[column_] > maxQ
+    outliers <- dataframe[mask, column_]
+    return(outliers)
+}
+```
+
+```{r}
+for (col in colnames(dt)) {
+    if (is.numeric(dt[, col])) {
+        cat (col, " ==> ", findOutliers(dt, col), "\n")
+    }
+}
+```
+
+```{r}
+dt$RR_med[dt$RR_med < 10] <- NA
+
+summary(dt$RR_med)
+```
+
+```{r}
+dt <- na.omit(dt)
+summary(dt$RR_med)
+
+```
+
+```         
+-   Lors de l’analyse exploratoire, certaines valeurs atypiques ont été identifiées, notamment dans la variable RR_med, avec des valeurs très faibles (proches de 0) incohérentes avec le reste des observations. Ces valeurs ont été considérées comme des erreurs de mesure ou de saisie et ont été remplacées par des valeurs manquantes (NA).Les valeurs manquantes quant à elles ont ensuite été supprimés.
+
+-   Pour les autres variables, les valeurs extrêmes observées restent plausibles au regard du contexte climatique et ont donc été conservées.
+```
+
+-   **Doublons :**
+
+    -   Nous avons pris le soin de supprimer les doublons lors de la création du csv à l'étape de transformation des requêtes de la problématique. Donc pas de doublon à signaler.
+
+    ## Exportation des données nettoyées
+
+    ```{r}
+    write.csv(x=dt, file='../../donnees/nettoyees/problematic_01.csv', row.names=FALSE)
+    ```
