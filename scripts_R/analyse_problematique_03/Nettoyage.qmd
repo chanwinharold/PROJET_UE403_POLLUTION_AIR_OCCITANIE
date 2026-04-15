@@ -1,0 +1,152 @@
+---
+title: "Nettoyage"
+format: html
+---
+
+# Accès aux données
+
+```{r}
+dt <- read.csv(file='../../donnees/traitees/problematic_03.csv')
+```
+
+## Nettoyage des données
+
+-   **Valeurs totales**
+
+    ```{r}
+    nrow(dt)
+    ```
+
+-   **Valeurs manquantes**
+
+```{r}
+colSums(is.na(dt))
+```
+
+### Interpretation des données
+
+Après les différentes étapes de nettoyage, l’analyse des valeurs manquantes montre que toutes les variables du jeu de données sont désormais complètes, avec 0 valeur manquante dans chaque colonne. Cela signifie que les traitements effectués en amont (gestion des valeurs non numériques, remplacement des modalités problématiques, etc.) ont permis d’obtenir un dataset entièrement exploitable.
+
+Par ailleurs, le travail de formatage (notamment la conversion des variables en type numérique lorsque nécessaire) permet d’assurer que toutes les variables quantitatives sont correctement interprétables par les outils statistiques.
+
+Pour la suite , nous allons juste faire un summary de notre dt pour voir les éventuels outliers , erreurs de formatage , etc
+
+```{r}
+summary (dt)
+```
+
+-   **Formatage des données**
+
+    On remarque grâce à `summary()` que la colonne `niveau_vie_median_2021` est sous le format `character` au lieu de `numeric` . De plus on a affaire à deux valeurs non numériques dans cette colonne : `N/A - secret statistique`.
+
+    ```{r}
+    mask <- dt$niveau_vie_median=='N/A - secret statistique'
+    dt[mask, 'niveau_vie_median'] <- NA
+    ```
+
+```{r}
+dt$niveau_vie_median <- as.numeric(dt$niveau_vie_median)
+```
+
+```{r}
+dt
+```
+
+```{r}
+summary(dt)
+```
+
+```{r}
+findOutliers <- function(dataframe, column_) {
+    Q1 <- quantile(dataframe[column_], 0.25, na.rm = TRUE)
+    Q3 <- quantile(dataframe[column_], 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+    
+    minQ <- Q1 - 1.5 * IQR
+    maxQ <- Q3 + 1.5 * IQR
+    
+    mask <- dataframe[column_] < minQ | dataframe[column_] > maxQ
+    outliers <- dataframe[mask, column_]
+    return(outliers)
+}
+```
+
+```{r}
+for (col in colnames(dt)) {
+  if (is.numeric(dt[[col]])) {
+    outliers <- findOutliers(dt, col)
+    
+    cat("\n", col, " ==> ", nrow(outliers), " outliers\n")
+    print(outliers)
+  }
+}
+```
+
+## Outliers
+
+**1-population_totale**\
+Q1 = 2 761\
+Médiane = 23 981\
+Q3 = 62 945\
+Max = 514 819\
+IQR = 60 184
+
+Seuils IQR\
+Seuil supérieur ≈ 153 221
+
+Résultats\
+Les valeurs supérieures à 153 221 sont considérées comme des outliers.\
+Le maximum observé (514 819) est une valeur extrêmement élevée.
+
+Conclusion\
+La distribution est fortement asymétrique, avec une très grande dispersion. Les valeurs extrêmes correspondent à de grandes agglomérations comparées à des communes beaucoup plus petites.
+
+**2-total_logements**\
+Q1 = 1 983\
+Q3 = 33 474\
+Max = 318 683\
+IQR = 31 491
+
+Seuils IQR\
+Seuil supérieur ≈ 80 710
+
+Résultats\
+Les valeurs supérieures à 80 710 sont des outliers.\
+Le maximum (318 683) constitue une valeur extrême.
+
+Conclusion\
+La distribution suit la même logique que la population totale, avec une forte hétérogénéité liée à la taille des communes.
+
+**3-niveau_vie_median**\
+Q1 = 19 600\
+Q3 = 22 320\
+Max = 29 940\
+IQR = 2 720\
+NA = 2
+
+Seuils IQR\
+Borne supérieure ≈ 26 400
+
+Résultats\
+Les valeurs supérieures à 26 400 sont des outliers.\
+Le maximum (29 940) est une valeur modérément élevée.
+
+Conclusion
+
+Synthèse générale
+
+Outliers forts
+
+-   population_totale
+
+-   total_logements
+
+Outliers modérés
+
+-   niveau_vie_median
+
+    ## Exportation des données nettoyées
+
+```{r}
+write.csv(x=dt, file='../../donnees/nettoyees/problematic_03.csv', row.names=FALSE)
+```
