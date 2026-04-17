@@ -1,0 +1,188 @@
+---
+title: "Analyse problématique"
+format: html
+author: "MOUISSI AMOUSSOU Hirche luca"
+---
+
+# **Analyse de la problématique**
+
+### **Problématique : Les communes bénéficiant de conditions climatiques favorables présentent-elles un niveau de vie médian plus élevé ?**
+
+Pour répondre à cette question, nous allons :
+
+-   Visualiser la relation entre les variables climatiques et le niveau de vie médian à l’aide de nuages de points accompagnés d’un lissage LOESS
+-   Calculer les corrélations afin d’identifier les variables climatiques les plus liées au niveau de vie
+-   Analyser les relations entre certaines variables climatiques pour mieux comprendre les dynamiques observées
+-   Conclure sur l’influence globale des conditions climatiques sur le niveau de vie
+
+## **1. Chargement des données**
+
+```{r}
+dt <- read.csv(file='../../donnees/nettoyees/problematic_01.csv')
+
+target <- "niveau_vie_median_2021"
+
+climatic_vars <- c(
+  "RR_med",
+  "NBJRR1_med",
+  "NBJRR5_med",
+  "NBJRR10_med",
+  "Tmin_med",
+  "Tmax_med",
+  "Tens_vap_med",
+  "Force_vent_med",
+  "Insolation_med",
+  "Rayonnement_med"
+)
+```
+
+1.  
+
+## **2. Nuages de points + LOESS**
+
+Dans un premier temps, nous avons représenté les relations entre le niveau de vie médian (niveau_vie_median_2021) et les différentes variables climatiques (température, rayonnement, insolation, précipitations, etc.).
+
+Pour cela, nous utilisons des nuages de points accompagnés d’une courbe de tendance LOESS, ce qui permet de visualiser la forme des relations (linéaire, non-linéaire ou absence de relation).
+
+```{r}
+par(mfrow = c(2, 2))
+
+for (col in climatic_vars) {
+  x <- dt[[col]]
+  y <- dt[[target]]
+
+  valid <- !is.na(x) & !is.na(y)
+  x_clean <- x[valid]
+  y_clean <- y[valid]
+
+  plot(x_clean, y_clean,
+       main = paste(target, "~", col),
+       xlab = col,
+       ylab = target,
+       pch = 19,
+       col = rgb(0, 0, 0, 0.3))
+
+  model_loess <- loess(y_clean ~ x_clean)
+  x_seq <- seq(min(x_clean), max(x_clean), length.out = 100)
+  y_pred <- predict(model_loess, newdata = data.frame(x_clean = x_seq))
+
+  lines(x_seq, y_pred, col = "blue", lwd = 2)
+}
+```
+
+**Interprétation :**
+
+```         
+On observe globalement une forte dispersion des points, ce qui indique que la relation entre les variables climatiques et le niveau de vie médian n’est pas très marquée.
+
+Cependant, certaines variables comme l’insolation, le rayonnement ou les températures semblent présenter une légère tendance positive : lorsque ces variables augmentent, le niveau de vie médian tend également à augmenter légèrement.
+
+À l’inverse, les précipitations (RR_med) ne montrent pas de relation claire avec le niveau de vie.
+
+Ces résultats suggèrent que des conditions climatiques plus favorables (plus ensoleillées et plus chaudes) pourraient être associées à un niveau de vie légèrement plus élevé, mais la relation reste faible.
+```
+
+## **3. Corrélations**
+
+Afin de quantifier les relations observées précédemment, nous calculons les coefficients de corrélation de Pearson entre le niveau de vie médian et les différentes variables climatiques.
+
+Cela permet d’identifier les variables les plus liées au niveau de vie et de mesurer l’intensité de ces relations.
+
+```{r}
+correlations <- sapply(climatic_vars, function(col) {
+  x <- dt[[col]]
+  y <- dt[[target]]
+  valid <- !is.na(x) & !is.na(y)
+  if (sum(valid) > 2) cor(x[valid], y[valid]) else NA
+})
+
+cor_df <- data.frame(
+  variable = climatic_vars,
+  correlation = round(correlations, 3)
+)
+
+cor_df <- cor_df[order(abs(cor_df$correlation), decreasing = TRUE), ]
+
+print(cor_df)
+```
+
+**Interprétation :**
+
+```         
+Les résultats montrent que certaines variables climatiques, notamment l’insolation, le rayonnement et les températures, présentent des corrélations positives avec le niveau de vie médian.
+
+Cependant, ces corrélations restent globalement faibles à modérées, ce qui signifie que ces variables n’expliquent qu’une partie limitée des variations du niveau de vie.
+
+Les précipitations présentent quant à elles des corrélations faibles, voire légèrement négatives, ce qui suggère qu’un climat plus humide n’est pas associé à un niveau de vie plus élevé.
+
+Ainsi, même si certaines tendances apparaissent, aucune variable climatique ne se démarque comme un facteur fortement déterminant.
+```
+
+## **4. Barplot**
+
+Afin de faciliter la lecture des corrélations, nous représentons les coefficients sous forme de diagramme en barres. Cela permet d’identifier rapidement les variables les plus influentes.
+
+```{r}
+barplot(
+  cor_df$correlation,
+  names.arg = cor_df$variable,
+  las = 2,
+  col = ifelse(cor_df$correlation > 0, "steelblue", "tomato"),
+  main = "Corrélation avec le niveau de vie médian",
+  ylab = "Corrélation",
+  cex.names = 0.7
+)
+
+abline(h = 0, lty = 2)
+```
+
+**Interprétation :**
+
+```         
+Le graphique confirme que les variables climatiques les plus liées au niveau de vie médian sont principalement celles liées à l’ensoleillement et aux températures.
+
+Cependant, les valeurs des corrélations restent relativement faibles, ce qui indique que l’influence du climat sur le niveau de vie est limitée.
+
+Aucune variable ne présente une corrélation suffisamment élevée pour expliquer à elle seule les différences de niveau de vie entre les communes.
+```
+
+## **5. Analyse par groupes**
+
+Afin d’aller plus loin dans l’analyse, nous comparons les communes en fonction de leurs conditions climatiques.
+
+Pour cela, nous séparons les observations en deux groupes (climat favorable et climat moins favorable) en utilisant l’insolation médiane comme critère.
+
+Nous comparons ensuite le niveau de vie médian entre ces deux groupes à l’aide d’un boxplot.
+
+```{r}
+dt$groupe_climat <- ifelse(
+  dt$Insolation_med > median(dt$Insolation_med, na.rm = TRUE),
+  "favorable", "moins_favorable"
+)
+```
+
+```{r}
+boxplot(niveau_vie_median_2021 ~ groupe_climat,
+        data = dt,
+        col = c("tomato", "steelblue"),
+        main = "Niveau de vie selon le climat",
+        ylab = "Niveau de vie médian")
+```
+
+**Interprétation :**
+
+On observe que les communes bénéficiant de conditions climatiques plus favorables présentent en moyenne un niveau de vie médian légèrement plus élevé.
+
+Cependant, les distributions restent assez proches et se chevauchent largement, ce qui montre que la différence n’est pas très marquée.
+
+Cela confirme que le climat peut avoir une influence, mais qu’il ne constitue pas un facteur déterminant du niveau de vie.
+
+### **Conclusion**
+
+L’analyse met en évidence l’existence d’un lien entre les conditions climatiques et le niveau de vie médian, mais ce lien reste modéré.
+
+Les variables liées à l’ensoleillement et aux températures semblent être associées à un niveau de vie légèrement plus élevé, ce qui peut s’expliquer par une attractivité accrue de certaines régions ou par des conditions de vie plus favorables.
+
+Cependant, les corrélations observées sont faibles, et les graphiques montrent une forte dispersion des données. Cela indique que d’autres facteurs, notamment socio-économiques et géographiques, jouent un rôle plus important dans la détermination du niveau de vie.
+
+Ainsi, la problématique est partiellement vérifiée : le climat peut influencer le niveau de vie, mais il ne constitue pas un facteur explicatif majeur à lui seul.

@@ -1,6 +1,7 @@
 ---
-title: "analyse_problematique"
+title: "Analyse problématique"
 format: html
+author: "CHANWIN Harold"
 ---
 
 # Analyse de la problématique

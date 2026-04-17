@@ -1,0 +1,83 @@
+---
+title: "Analyse univariée"
+format: html
+author: "KABA Ismael n'fallah"
+---
+
+# Analyse uni-variée des données
+
+```{r}
+dt <- read.csv(file="../../donnees/nettoyees/problematic_03.csv")
+```
+
+## **Fonction de visualisation**
+
+```{r}
+makeVisualisation <- function(dataframe_, colname_) {
+  
+  x <- dataframe_[[colname_]]
+  
+  par(mfrow = c(1, 3), oma = c(0, 0, 3, 0))
+  
+  # CAS 1 : variable numérique
+  if (is.numeric(x)) {
+    
+    hist(x,probability = TRUE,main = "Histogramme",xlab = colname_)
+    lines(density(x, na.rm = TRUE), col = "red", lwd = 2)
+    boxplot(x,main = "Boxplot",xlab = colname_)
+  } else {
+    
+    # CAS 2 : variable qualitative
+    tab <- table(x)
+    barplot(tab,main = "Diagramme en barres",col = "lightblue",las = 2)
+    pie(tab,main = "Répartition")
+  }
+  mtext(paste("Visualisation de la variable", colname_),
+      outer = TRUE,
+      cex = 1.5)
+}
+```
+
+```{r}
+numerical_columns <- c(
+    "typologie",
+    "influence",
+    "niveau_vie_median",
+    "total_logements",
+    "moy_pourcentage_appartements",
+    "moy_locataires",
+    "evolution_population",
+    "population_totale",
+    "taux_activite"                                                    
+)
+```
+
+```{r}
+for (numcol in numerical_columns) {
+    makeVisualisation(dt, numcol)
+}
+```
+
+## **Interprétations**
+
+**Analyse de la variable typologie**
+
+La variable *typologie* montre une forte dominance de la catégorie urbaine, largement majoritaire par rapport aux autres. Les zones périurbaines et rurales sont présentes mais en proportions beaucoup plus faibles, tandis que les autres catégories restent marginales. Cette répartition met en évidence une prédominance des espaces urbanisés, traduisant une structure territoriale fortement centrée sur les villes.
+
+**Analyse de la variable influence**
+
+La variable *influence* est dominée par la catégorie « fond », largement majoritaire. Les influences industrielle et trafic sont présentes mais en proportions nettement plus faibles. Cette répartition indique que la majorité des observations est peu affectée par des influences spécifiques, tandis que les effets industriels et liés au trafic restent secondaires.
+
+**Analyse de la variable niveau_vie_median**
+
+La variable *niveau_vie_median* présente une distribution relativement concentrée autour de valeurs moyennes, avec une légère asymétrie à droite. La majorité des observations se situe autour de 20 000 à 23 000, indiquant un niveau de vie médian assez homogène entre les communes. Quelques valeurs plus élevées apparaissent, correspondant à des communes plus aisées, mais elles restent peu nombreuses. Globalement, la dispersion est modérée et ne révèle pas de déséquilibres majeurs.
+
+**Analyse de la variable *total_logements***
+
+La variable *total_logements* présente une distribution très asymétrique à droite : la majorité des communes ont peu de logements, tandis que quelques grandes villes concentrent des valeurs très élevées. Le boxplot confirme une médiane basse, une faible dispersion pour les petites valeurs et la présence de nombreux outliers. Ces valeurs extrêmes ne sont pas des erreurs mais reflètent la différence entre petites communes et grandes agglomérations, montrant une forte hétérogénéité territoriale.
+
+**Analyse de la variable *moy_pourcentage_appartement*** Les communes présentent des profils très contrastés : certaines ont très peu d'appartements (habitat pavillonnaire dominant), d'autres en ont une large majorité (profil urbain dense). Cette variable oppose clairement les **communes rurales/périurbaines** aux **communes urbaines**, sans valeur aberrante — la diversité observée est structurelle.
+
+**Analyse de la variable *moy_locataires***
+
+La variable *moy_locataires* présente une distribution légèrement asymétrique à droite, comme le montre l’histogramme avec une densité plus marquée autour des valeurs comprises entre 40 et 60. La moyenne et la médiane se situent aux alentours de 50, ce qui indique que la majorité des observations concernent des valeurs moyennes à relativement élevées. Le boxplot confirme cette tendance, avec une dispersion modérée et quelques valeurs basses en dessous de 20, suggérant la présence éventuelle d’observations atypiques. Globalement, la variable traduit une moyenne de locataires plutôt élevée, avec une variabilité modérée au sein de l’échantillon.

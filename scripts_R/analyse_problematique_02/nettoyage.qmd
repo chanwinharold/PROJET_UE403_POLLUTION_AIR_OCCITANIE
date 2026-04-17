@@ -1,6 +1,7 @@
 ---
-title: "nettoyage"
+title: "Nettoyage des données"
 format: html
+author: "AGBAGNO Kokou fiovi henoc"
 ---
 
 # Importation des données

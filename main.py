@@ -1,3 +1,6 @@
+# CHANWIN Harold
+
+
 from modules.database import DBCreation
 from modules.extraction import DataManager
 
@@ -89,7 +92,7 @@ def creation():
     for i in range(len(FILE_PATHS)):
         db.drop_table(TABLE_NAMES[i])
 
-    print("CREATION DONE ✅🎉")
+    print("CREATION DONE ✅ 🎉")
 
 
 
@@ -167,7 +170,7 @@ def transformation():
             filename_=FILENAMES[i],
             query_=QUERIES[i]
         )
-    print("TRANSFORMATION DONE ✅🎉")
+    print("TRANSFORMATION DONE ✅ 🎉")
 
 ###################################################################
 ########################## EXÉCUTION ##############################

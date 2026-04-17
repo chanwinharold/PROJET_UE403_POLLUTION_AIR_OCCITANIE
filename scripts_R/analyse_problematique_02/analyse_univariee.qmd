@@ -1,0 +1,121 @@
+---
+title: "Analyse univariée"
+format: html
+author: "AGBAGNO Kokou fiovi henoc"
+---
+
+# Analyse uni-variée des données
+
+```{r}
+dt <- read.csv(file="../../donnees/nettoyees/problematic_02.csv")
+```
+
+## **Fonction de visualisation**
+
+```{r}
+makeVisualisation = function(dataframe_, colname_) {
+    par(mfrow=c(1, 2), oma = c(0, 0, 3, 0))
+
+    # Visualisation de l'Histogramme
+    hist(dataframe_[[colname_]], probability=TRUE, main="Histogramme",xlab=colname_)
+    lines(density(dataframe_[[colname_]], na.rm = TRUE), col = "red", lwd = 2)
+    
+    # Visualisation du Boxplot
+    boxplot(dataframe_[[colname_]], main="Boxplot", xlab=colname_)
+    mtext(paste("Visualisation de la variable", colname_), outer = TRUE, cex = 1.5)
+}
+```
+
+```{r}
+numerical_columns <- c(
+    
+    "valeur_poll"
+    
+)
+```
+
+```{r}
+for (numcol in numerical_columns) {
+    makeVisualisation(dt, numcol)
+}
+```
+
+## **Interprétations**
+
+### Histogramme
+
+-   La distribution est **fortement asymétrique à droite** (right-skewed) : la grande majorité des valeurs se concentre près de 0, avec une queue qui s'étire jusqu'à \~400.
+
+-   Le pic de densité est très élevé entre 0 et \~20, ce qui indique que la plupart des observations ont de très petites valeurs.
+
+-   La courbe rouge (densité estimée) confirme cette forme exponentielle décroissante.
+
+### Boxplot
+
+-   La **médiane** est très basse (proche de 0), confirmant que 50% des données sont concentrées dans une plage étroite de petites valeurs
+
+-   La **boîte interquartile (IQR)** est très compressée en bas, ce qui traduit une faible dispersion pour la majorité des observations
+
+-   On observe de **nombreux points aberrants (outliers)** au-dessus du moustache supérieur, s'étendant jusqu'à \~400. Ces valeurs extrêmes sont bien visibles sous forme de points isolés.
+
+### Conclusion générale
+
+La variable `valeur_poll` présente une distribution **non normale**, très asymétrique avec une forte concentration de valeurs faibles et de nombreuses valeurs atypiques élevées. Une **transformation logarithmique** (`log(valeur_poll + 1)`) pourrait être envisagée pour normaliser la distribution avant toute modélisation.
+
+```{r}
+list_variables <- c("influence", "typologie", "nom_poll")
+for (variable in list_variables) { 
+  par(mar = c(6, 7, 4, 2),
+      mgp = c(4, 1, 0)) 
+  freq <- table(dt[[variable]])
+  barplot(freq,
+          main = paste("Répartition par", variable),
+          xlab = "Catégories",
+          ylab = "Fréquence",
+          col = "steelblue",
+          las = 1, 
+          cex.names = 0.8) 
+}
+ 
+```
+
+```{r}
+colnames(dt)
+```
+
+# 1. Répartition par typologie
+
+### Interprétation :
+
+La majorité des données provient des zones urbaines.\
+Les zones rurales sont **très peu représentées**, donc moins analysées.
+
+# 2. Répartition par influence
+
+### Interprétation :
+
+-   Le **niveau de pollution général (fond)** domine → pollution diffuse, pas liée à une source unique
+
+-   Le **trafic routier** joue un rôle significatif
+
+-   L’**industrie** a un impact plus limité dans tes données
+
+# 3. Répartition par polluant (nom_poll)
+
+### Interprétation
+
+-   Les polluants dominants sont typiques :
+
+    -   du **trafic routier** (NO2, NOX)
+
+    -   de la **pollution atmosphérique générale** (O3, particules fines)
+
+-   Les polluants industriels (comme SO2) sont peu présents
+
+**Conclusion**
+
+L’analyse montre que les données sont principalement issues du milieu urbain, avec une faible représentation des zones rurales. La pollution observée est majoritairement une pollution de fond, complétée par une influence notable du trafic routier, tandis que l’impact industriel reste limité.
+
+Les polluants les plus présents (NO₂, NOx, O₃, PM10, PM2.5) confirment un profil de pollution typiquement urbain, lié aux activités humaines et à la circulation.
+
+En conclusion, ces résultats décrivent essentiellement une pollution urbaine diffuse, mais doivent être interprétés avec prudence en raison du manque de représentativité des zones rurales.

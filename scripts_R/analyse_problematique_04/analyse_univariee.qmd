@@ -1,6 +1,7 @@
 ---
-title: "analyse_univariee"
+title: "Analyse univariée"
 format: html
+author: "CHANWIN Harold"
 ---
 
 # Analyse uni-variée des données

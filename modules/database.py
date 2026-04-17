@@ -1,3 +1,6 @@
+# CHANWIN Harold
+
+
 import sqlite3 as sql
 from sqlite3 import Connection, Cursor
 from modules.extraction import DataManager
